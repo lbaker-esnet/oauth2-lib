@@ -14,7 +14,7 @@ discovery = {
     "authorization_endpoint": "https://connect.test.surfconext.nl/oidc/authorize",
     "token_endpoint": "https://connect.test.surfconext.nl/oidc/token",
     "userinfo_endpoint": "https://connect.test.surfconext.nl/oidc/userinfo",
-    "introspect_endpoint": "https://connect.test.surfconext.nl/oidc/introspect",
+    "introspection_endpoint": "https://connect.test.surfconext.nl/oidc/introspect",
     "jwks_uri": "https://connect.test.surfconext.nl/oidc/certs",
     "response_types_supported": [
         "code",
@@ -90,6 +90,7 @@ user_info_matching: OIDCUserModel = {  # type:ignore
     "scope": "openid test:scope",
     "client_id": mock.ANY,
     "user_id": "test:role1",
+    "realm_access": {"roles": ["inf_admin", "uma_authorization"]}
 }
 
 id_token_response = {
@@ -206,7 +207,7 @@ async def test_introspect_token(make_mock_async_client):
     assert result == user_info_matching
 
     mock_async_client.post.assert_called_once_with(
-        discovery["introspect_endpoint"],
+        discovery["introspection_endpoint"],
         auth=MockBasicAuth("id", "secret"),
         headers={"Content-Type": "application/x-www-form-urlencoded"},
         params={"token": access_token},
@@ -235,7 +236,7 @@ async def test_introspect_exception():
     assert exception.value.detail == "error"
 
     mock_async_client.post.assert_called_once_with(
-        discovery["introspect_endpoint"],
+        discovery["introspection_endpoint"],
         auth=MockBasicAuth("id", "secret"),
         headers={"Content-Type": "application/x-www-form-urlencoded"},
         params={"token": access_token},
@@ -538,3 +539,4 @@ def test_OIDCUserModel():
     assert user_model.organization_codes == set()
     assert user_model.organization_guids == set()
     assert user_model.scopes == {"openid", "test:scope"}
+    assert user_model.realmroles == {"inf_admin", "uma_authorization"}

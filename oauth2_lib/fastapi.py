@@ -70,6 +70,12 @@ class OIDCUserModel(dict):
     """
 
     @property
+    def realmroles(self) -> List[str]:
+        realm_access = self.get("realm_access", {})
+        realm_roles = realm_access.get("roles", [])
+        return set(realm_roles)
+
+    @property
     def user_name(self) -> str:
         if "user_name" in self.keys():
             return cast(str, self["user_name"])
@@ -139,7 +145,7 @@ class OIDCConfig(BaseModel):
     authorization_endpoint: str
     token_endpoint: str
     userinfo_endpoint: str
-    introspect_endpoint: str
+    introspection_endpoint: str
     jwks_uri: str
     response_types_supported: List[str]
     response_modes_supported: List[str]
@@ -249,7 +255,7 @@ class OIDCUser(HTTPBearer):
         assert self.openid_config
 
         response = await async_request.post(
-            self.openid_config.introspect_endpoint,
+            self.openid_config.introspection_endpoint,
             params={"token": token},
             auth=BasicAuth(self.resource_server_id, self.resource_server_secret),
             headers={"Content-Type": "application/x-www-form-urlencoded"},
